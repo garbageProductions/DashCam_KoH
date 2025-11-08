@@ -135,13 +135,15 @@ async function getTeamInfo(updateRed: boolean) {
 			});
 
 			const teamJson = await team.json();
+			const logourl = new URL(teamJson.logo);
+			logourl.host = "dashleague.dev-dave.com";
 
-			newTeamData.logoFound = false;
-
-			if (team.ok) {
+			const isimagevalid = await fetch(logourl);
+			if(isimagevalid.ok){
 				newTeamData.logoFound = true;
-				newTeamData.logo = teamJson.logo;
+				newTeamData.logo = logourl.toString();
 			}
+			
 		}
 		catch (e) {
 			newTeamData.logoFound = false;
