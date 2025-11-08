@@ -127,7 +127,7 @@ async function getTeamInfo(updateRed: boolean) {
 	// dashleague
 	if (settingState.IconSettings.iconMode == iconModes.dashLeague) {
 		try {
-			const team = await fetch(`https://dashleague.dev-dave.com/api/v1/team?teamName=${encodeURIComponent(teamName)}`, {
+			const team = await fetch(`https://dashleague.games/api/v1/team?teamName=${encodeURIComponent(teamName)}`, {
 			method: 'GET',
 			headers: {
 				'X-User-Identifier': 'casting'
@@ -135,13 +135,11 @@ async function getTeamInfo(updateRed: boolean) {
 			});
 
 			const teamJson = await team.json();
-			const logourl = new URL(teamJson.logo);
-			logourl.host = "dashleague.dev-dave.com";
 
-			const isimagevalid = await fetch(logourl);
+			const isimagevalid = await fetch(teamJson.logo);
 			if(isimagevalid.ok){
 				newTeamData.logoFound = true;
-				newTeamData.logo = logourl.toString();
+				newTeamData.logo = teamJson.logo
 			}
 			
 		}
