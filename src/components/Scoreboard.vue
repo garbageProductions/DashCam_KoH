@@ -169,9 +169,12 @@ import { computed, onMounted, ref, watch } from "vue";
 import { AnnouncerTypes, MatchType, Teams } from "@/interfaces/StoreInterfaces/MatchInfo";
 import Bar from "./Bar.vue";
 import { useMatchStateStore } from "@/stores/MatchStateStore";
+import { useKohScoreStore, showKohScores } from "@/stores/KohScoreStore";
 import { EventAnnouncer } from "@/HyperBashLogic/HyperBashEvents";
 import { AnnouncerLayout } from "@/interfaces/HyperBashMessages.interface";
 import { PlayerStateInfo } from "@/interfaces/StoreInterfaces/StoreState";
+
+const kohScore = useKohScoreStore();
 
 const state = useMatchStateStore();
 let customTimer = ref(0);
@@ -182,6 +185,8 @@ onMounted(() => {
 })
 
 const blueTeamScore = computed(() => {
+	if (showKohScores.value) return Math.floor(kohScore.blueScore * 100) / 100;
+
 	if (state.GetMatchInfo.matchType == MatchType.Payload) {
 		if (state.GetMatchInfo.payload.precisePayloadDistance) {
 			let number = state.GetMatchInfo.payload.precisePayloadDistance;
@@ -201,6 +206,8 @@ const blueTeamScore = computed(() => {
 })
 
 const redTeamScore = computed(() => {
+	if (showKohScores.value) return Math.floor(kohScore.redScore * 100) / 100;
+
 	if(state.GetMatchInfo.matchType == MatchType.Deathmatch){
 		var teamSort = state.PlayerData
 			.filter((e: PlayerStateInfo) => e.isActive == true)

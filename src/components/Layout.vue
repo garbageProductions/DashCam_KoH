@@ -2,6 +2,7 @@
 	<div class="container">
 		<team :team="1" /> <!-- blue -->
 		<scoreboard />
+		<koh-scoreboard />
 		<team :team="0" /> <!-- red -->
 		<player-bar />
 		<kill-feed />
@@ -100,6 +101,7 @@ import { useMatchStateStore } from "@/stores/MatchStateStore";
 import { useSettingStore } from "@/stores/SettingsStore";
 import { watch } from "vue";
 import KillFeed from "./KillFeed.vue";
+import KohScoreboard from "./KohScoreboard.vue";
 import PlayerBar from "./PlayerBar.vue";
 import Scoreboard from "./Scoreboard.vue";
 import Team from "./Team.vue";
