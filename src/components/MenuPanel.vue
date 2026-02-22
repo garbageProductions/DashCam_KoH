@@ -1,12 +1,12 @@
 <template>
-    <div class="panel" v-if="isOpen">
+    <div class="panel" v-if="isMenuOpen">
         <div class="panel_wrapper">
 
             <!-- Header -->
             <div class="panel_header">
                 <h1>DashCam</h1>
                 <span class="panel_hint">Right Shift to close</span>
-                <button class="close_btn" @click="isOpen = false">✕</button>
+                <button class="close_btn" @click="isMenuOpen = false">✕</button>
             </div>
 
             <!-- Top-level tabs: Settings | KoH | Payload | Kills -->
@@ -533,9 +533,6 @@ import { usePayloadTrackerStore, showPayloadOverlay, payloadChartType } from "@/
 import { useKillTrackerStore } from "@/stores/KillTrackerStore";
 import type { KohZone } from "@/interfaces/KohZone";
 import { isMenuOpen, headshotFlashEnabled } from "@/stores/UiState";
-
-// ── Panel open/close — driven by module-level ref in UiState ──────────────────
-const isOpen = isMenuOpen;
 
 // ── Top-level tab ─────────────────────────────────────────────────────────────
 const topTab = ref<"settings" | "koh" | "payload" | "kills">("settings");
