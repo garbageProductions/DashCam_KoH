@@ -516,7 +516,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed } from "vue";
 import { iconModes } from "@/interfaces/StoreInterfaces/StoreState";
 import { useSettingStore } from "@/stores/SettingsStore";
 import { useKohZoneStore } from "@/stores/KohZoneStore";
@@ -525,18 +525,10 @@ import { useMatchStateStore } from "@/stores/MatchStateStore";
 import { usePayloadTrackerStore, showPayloadOverlay, payloadChartType } from "@/stores/PayloadTrackerStore";
 import { useKillTrackerStore } from "@/stores/KillTrackerStore";
 import type { KohZone } from "@/interfaces/KohZone";
+import { isMenuOpen } from "@/stores/UiState";
 
-// ── Panel open/close ──────────────────────────────────────────────────────────
-const isOpen = ref(false);
-
-function onKeyDown(e: KeyboardEvent) {
-    if (e.code === "ShiftRight" && !e.repeat) {
-        isOpen.value = !isOpen.value;
-    }
-}
-
-onMounted(() => document.addEventListener("keydown", onKeyDown));
-onUnmounted(() => document.removeEventListener("keydown", onKeyDown));
+// ── Panel open/close — driven by module-level ref in UiState ──────────────────
+const isOpen = isMenuOpen;
 
 // ── Top-level tab ─────────────────────────────────────────────────────────────
 const topTab = ref<"settings" | "koh" | "payload" | "kills">("settings");
