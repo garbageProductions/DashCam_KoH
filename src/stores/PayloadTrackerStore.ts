@@ -100,10 +100,9 @@ export const usePayloadTrackerStore = defineStore("payloadTracker", () => {
         () => matchStore.MatchInfo.payload.secondRound,
         (isSecond) => {
             if (isSecond && currentRound.value === 1) {
-                // First round done — switch to round 2.
-                // Snapshot the R2 team name now (the other team, now pushing).
-                // After the swap, TeamData.blue is the new blue = R2 pusher.
-                round2TeamName.value = matchStore.TeamData.blue.name || "Blue";
+                // R1 done — red team now pushes (secondRound = sides have swapped).
+                // Names were already snapshotted at startRecording() so nothing
+                // to update here — just advance the round and reset the clock.
                 currentRound.value = 2;
                 roundStartWallTime = performance.now();
                 wasCheckpoint = false;
@@ -155,9 +154,12 @@ export const usePayloadTrackerStore = defineStore("payloadTracker", () => {
         isRecording.value = true;
         wasCheckpoint = false;
         lastCheckpointDistance.value = null;
-        // Snapshot R1 team name (blue pushes first in payload)
+        // In payload R1: blue pushes (amountBlueOnCart / cartBlockedByRed are
+        // always relative to fixed team colors). Snapshot both names now —
+        // R1 pusher = blue, R1 defender = red. These never change after this.
         round1TeamName.value = matchStore.TeamData.blue.name || "Blue";
-        round2TeamName.value = "";
+        // R2 pusher will be the red team (they swap sides, red now pushes).
+        round2TeamName.value = matchStore.TeamData.red.name || "Red";
     }
 
     function stopRecording() {
