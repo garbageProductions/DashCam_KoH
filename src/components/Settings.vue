@@ -1,9 +1,8 @@
 <template>
-    <div class="modal" v-if="showSettings">
+    <div class="modal" v-if="false">
         <div class="modal_wrapper">
             <div class="modal_content">
                 <h1>Settings</h1>
-                <p>Press <b>S</b> to close</p>
                 <h2>TeamIcon</h2>
                 <div id="iconURL">
                     <div>

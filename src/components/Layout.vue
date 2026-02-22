@@ -7,6 +7,7 @@
 		<player-bar />
 		<kill-feed />
 	</div>
+	<payload-overlay />
 </template>
 
 <style lang="css">
@@ -102,6 +103,7 @@ import { useSettingStore } from "@/stores/SettingsStore";
 import { watch } from "vue";
 import KillFeed from "./KillFeed.vue";
 import KohScoreboard from "./KohScoreboard.vue";
+import PayloadOverlay from "./PayloadOverlay.vue";
 import PlayerBar from "./PlayerBar.vue";
 import Scoreboard from "./Scoreboard.vue";
 import Team from "./Team.vue";

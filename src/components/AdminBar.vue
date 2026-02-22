@@ -1,7 +1,4 @@
 <template>
-    <div id="admin_koh">
-        <button @click="$emit('openKohAdmin')">KoH Zones</button>
-    </div>
     <div id="admin" v-if=ShouldDisplayDebugMenu>
         <a>{{ ConnectingMessage }}</a>
         <button @click="AddFakeData">Fake Data</button>
@@ -11,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-defineEmits(['openHelp', 'openKohAdmin']);
+defineEmits(['openHelp']);
 
 import { useMatchStateStore } from "@/stores/MatchStateStore";
 import { ref, computed } from "vue";
@@ -74,25 +71,4 @@ const ConnectingMessage = computed(() => {
     white-space: nowrap;
 }
 
-#admin_koh {
-    position: fixed;
-    top: 0;
-    right: 0;
-    z-index: 10;
-    padding: 0.5em;
-}
-
-#admin_koh button {
-    background-color: rgba(0, 0, 0, 0.6);
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 0.4em 0.8em;
-    cursor: pointer;
-    font-size: 0.85em;
-    border-radius: 3px;
-}
-
-#admin_koh button:hover {
-    background-color: rgba(0, 69, 255, 0.7);
-}
 </style>
