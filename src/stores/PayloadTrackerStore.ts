@@ -66,7 +66,7 @@ export const usePayloadTrackerStore = defineStore("payloadTracker", () => {
     }
 
     // ── Recording state ───────────────────────────────────────────────────────
-    // round1 = blue team push (first push), round2 = red team push (second push)
+    // round1 = whichever team pushes first, round2 = the other team
     const round1Samples = ref<PayloadSample[]>([]);
     const round2Samples = ref<PayloadSample[]>([]);
 
@@ -74,6 +74,11 @@ export const usePayloadTrackerStore = defineStore("payloadTracker", () => {
     const currentRound = ref<1 | 2>(1);
     let roundStartWallTime = 0; // performance.now() when this round began
     const lastCheckpointDistance = ref<number | null>(null);
+
+    // Snapshot team names at the moment each round starts so labels
+    // don't flip when the game swaps teams at halftime.
+    const round1TeamName = ref<string>("");
+    const round2TeamName = ref<string>("");
 
     // ── Auto-detect checkpoint ────────────────────────────────────────────────
     let wasCheckpoint = false;
@@ -95,7 +100,10 @@ export const usePayloadTrackerStore = defineStore("payloadTracker", () => {
         () => matchStore.MatchInfo.payload.secondRound,
         (isSecond) => {
             if (isSecond && currentRound.value === 1) {
-                // First round done — switch to round 2
+                // First round done — switch to round 2.
+                // Snapshot the R2 team name now (the other team, now pushing).
+                // After the swap, TeamData.blue is the new blue = R2 pusher.
+                round2TeamName.value = matchStore.TeamData.blue.name || "Blue";
                 currentRound.value = 2;
                 roundStartWallTime = performance.now();
                 wasCheckpoint = false;
@@ -147,6 +155,9 @@ export const usePayloadTrackerStore = defineStore("payloadTracker", () => {
         isRecording.value = true;
         wasCheckpoint = false;
         lastCheckpointDistance.value = null;
+        // Snapshot R1 team name (blue pushes first in payload)
+        round1TeamName.value = matchStore.TeamData.blue.name || "Blue";
+        round2TeamName.value = "";
     }
 
     function stopRecording() {
@@ -196,6 +207,8 @@ export const usePayloadTrackerStore = defineStore("payloadTracker", () => {
         activeMapCheckpoint,
         round1Velocity,
         round2Velocity,
+        round1TeamName,
+        round2TeamName,
         getCheckpoint,
         setCheckpoint,
         removeCheckpoint,

@@ -133,10 +133,6 @@
                         <!-- fill -->
                         <div class="race_fill race_fill--r1"
                             :style="{ width: blueRacePos + '%' }" />
-                        <!-- defender bar: overlaid stripe at the leading edge when blocked -->
-                        <div class="race_defender race_defender--r1"
-                            v-if="blueDefenderOnCart"
-                            :style="{ left: Math.max(0, blueRacePos - 8) + '%', width: Math.min(8, blueRacePos) + '%' }" />
                         <!-- cart head -->
                         <div class="race_head race_head--r1"
                             :style="{ left: blueRacePos + '%' }" />
@@ -152,9 +148,6 @@
                             :style="{ left: tracker.activeMapCheckpoint + '%' }" />
                         <div class="race_fill race_fill--r2"
                             :style="{ width: redRacePos + '%' }" />
-                        <div class="race_defender race_defender--r2"
-                            v-if="redDefenderOnCart"
-                            :style="{ left: Math.max(0, redRacePos - 8) + '%', width: Math.min(8, redRacePos) + '%' }" />
                         <div class="race_head race_head--r2"
                             :style="{ left: redRacePos + '%' }" />
                     </div>
@@ -182,11 +175,12 @@ import type { PayloadSample } from "@/stores/PayloadTrackerStore";
 const tracker = usePayloadTrackerStore();
 const matchStore = useMatchStateStore();
 
-// ── Team names (R1 = blue side, R2 = red side) ───────────────────────────────
-// In payload, blue team pushes first (R1), red team pushes second (R2).
-// Names come from the store's clan-tag detection; fall back to "Blue"/"Red".
-const r1TeamName = computed(() => matchStore.TeamData.blue.name || "Blue");
-const r2TeamName = computed(() => matchStore.TeamData.red.name || "Red");
+// ── Team names — frozen snapshots from the store ──────────────────────────────
+// Captured at round start so they don't flip when the game swaps teams at halftime.
+// r1TeamName = name of team that pushed in round 1 (blue at kickoff)
+// r2TeamName = name of team that pushed in round 2 (the other team)
+const r1TeamName = computed(() => tracker.round1TeamName || "Blue");
+const r2TeamName = computed(() => tracker.round2TeamName || "Red");
 
 // ── Drag-to-reposition ────────────────────────────────────────────────────────
 const POS_KEY = "payloadOverlayPos";
@@ -356,24 +350,6 @@ const redRacePos = computed(() => {
     return s.length > 0 ? s[s.length - 1].distance : 0;
 });
 
-// Defender-on-cart state for race bars
-const blueDefenderOnCart = computed(() => {
-    if (tracker.currentRound === 1) {
-        const s = tracker.round1Samples;
-        return s.length > 0 ? s[s.length - 1].defenderOnCart : false;
-    }
-    const s = tracker.round1Samples;
-    const elapsed = syncedElapsed.value;
-    const sample = s.findLast((sp) => sp.time <= elapsed);
-    return sample?.defenderOnCart ?? false;
-});
-
-const redDefenderOnCart = computed(() => {
-    if (tracker.currentRound === 1) return false;
-    const s = tracker.round2Samples;
-    return s.length > 0 ? s[s.length - 1].defenderOnCart : false;
-});
-
 function formatVelocity(v: number | null): string {
     if (v === null) return "—";
     return (v >= 0 ? "+" : "") + v.toFixed(2);
@@ -388,14 +364,12 @@ $r1-color-dim:  rgba(0, 69, 255, 0.6);
 $r1-glow:       #4d8fff;
 $r1-fill-grad:  linear-gradient(90deg, rgba(0,69,255,0.55), rgba(114,174,255,0.8));
 $r1-shade:      #4d8fff;
-$r1-def-color:  rgba(255,60,60,0.85);   // red defender blocking blue cart
 
 $r2-color:      #ff7272;
 $r2-color-dim:  rgba(200, 0, 0, 0.6);
 $r2-glow:       #ff4d4d;
 $r2-fill-grad:  linear-gradient(90deg, rgba(200,0,0,0.55), rgba(255,114,114,0.8));
 $r2-shade:      #ff4d4d;
-$r2-def-color:  rgba(255,60,60,0.85);   // red defender blocking red cart too
 
 .payload_overlay {
     position: fixed;
@@ -629,24 +603,6 @@ $r2-def-color:  rgba(255,60,60,0.85);   // red defender blocking red cart too
 
     &--r1 { background: $r1-fill-grad; }
     &--r2 { background: $r2-fill-grad; }
-}
-
-// Defender bar: solid red/dark bar at the leading edge of the fill
-.race_defender {
-    position: absolute;
-    top: 0; bottom: 0;
-    transition: left 0.12s linear, width 0.12s linear;
-    z-index: 2;
-
-    // Always red — it's the defender (red team) blocking the cart
-    &--r1 {
-        background: rgba(220, 30, 30, 0.82);
-        box-shadow: inset 0 0 0 1px rgba(255,80,80,0.6);
-    }
-    &--r2 {
-        background: rgba(220, 30, 30, 0.82);
-        box-shadow: inset 0 0 0 1px rgba(255,80,80,0.6);
-    }
 }
 
 .race_head {
