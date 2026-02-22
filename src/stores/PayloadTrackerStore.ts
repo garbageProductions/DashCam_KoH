@@ -136,14 +136,22 @@ export const usePayloadTrackerStore = defineStore("payloadTracker", () => {
                     round2TeamName.value = matchStore.TeamData.red.name  || "Red";
                     round1NameLocked = true;
                 }
-                round1Samples.value.push(sample);
+                // Stop recording once the cart hits 100% — don't let the
+                // distance drop back to 0 when the round resets.
+                const lastR1 = round1Samples.value[round1Samples.value.length - 1];
+                if (!lastR1 || lastR1.distance < 100) {
+                    round1Samples.value.push(sample);
+                }
             } else {
                 // Lock R2 name on first R2 sample (belt-and-suspenders).
                 if (!round2NameLocked) {
                     round2TeamName.value = matchStore.TeamData.red.name || "Red";
                     round2NameLocked = true;
                 }
-                round2Samples.value.push(sample);
+                const lastR2 = round2Samples.value[round2Samples.value.length - 1];
+                if (!lastR2 || lastR2.distance < 100) {
+                    round2Samples.value.push(sample);
+                }
             }
 
             // Auto-detect checkpoint
