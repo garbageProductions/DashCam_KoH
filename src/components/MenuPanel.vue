@@ -9,7 +9,7 @@
                 <button class="close_btn" @click="isOpen = false">✕</button>
             </div>
 
-            <!-- Top-level tabs: Settings | KoH | Payload -->
+            <!-- Top-level tabs: Settings | KoH | Payload | Kills -->
             <div class="tab_bar tab_bar--top">
                 <button
                     class="tab_btn"
@@ -26,6 +26,11 @@
                     :class="{ 'tab_btn--active': topTab === 'payload' }"
                     @click="topTab = 'payload'"
                 >🛒 Payload</button>
+                <button
+                    class="tab_btn"
+                    :class="{ 'tab_btn--active': topTab === 'kills' }"
+                    @click="topTab = 'kills'"
+                >🔫 Kills</button>
             </div>
 
             <!-- ══ SETTINGS TAB ══════════════════════════════════════ -->
@@ -378,6 +383,134 @@
             </div>
             <!-- end Payload tab -->
 
+            <!-- ══ KILLS TAB ════════════════════════════════════════ -->
+            <div class="tab_content" v-show="topTab === 'kills'">
+
+                <!-- Event count + clear -->
+                <div class="kf_header_row">
+                    <span class="kf_event_count">{{ killTracker.events.length }} kill events this match</span>
+                    <button class="btn_reset" style="font-size:0.78em" @click="clearKillLog">Clear Log</button>
+                </div>
+
+                <!-- Player selector -->
+                <div class="form_row" style="margin-bottom: 0.9em">
+                    <label>Player</label>
+                    <select v-model="selectedKillPlayerID">
+                        <option :value="-1" disabled>Select a player</option>
+                        <option
+                            v-for="p in activePlayers"
+                            :key="p.playerID"
+                            :value="p.playerID"
+                        >{{ p.name || `Player ${p.playerID}` }}</option>
+                    </select>
+                </div>
+
+                <!-- Per-player stats when someone is selected -->
+                <template v-if="selectedKillPlayerID !== -1 && killTracker.events.length > 0">
+                    <!-- K/D summary bar -->
+                    <div class="kf_kd_bar">
+                        <div class="kf_kd_stat kf_kd_stat--kills">
+                            <span class="kf_kd_num">{{ killTracker.totalKills(selectedKillPlayerID) }}</span>
+                            <span class="kf_kd_label">Kills</span>
+                        </div>
+                        <div class="kf_kd_divider"></div>
+                        <div class="kf_kd_stat kf_kd_stat--deaths">
+                            <span class="kf_kd_num">{{ killTracker.totalDeaths(selectedKillPlayerID) }}</span>
+                            <span class="kf_kd_label">Deaths</span>
+                        </div>
+                        <div class="kf_kd_divider"></div>
+                        <div class="kf_kd_stat">
+                            <span class="kf_kd_num">{{
+                                killTracker.totalDeaths(selectedKillPlayerID) === 0
+                                    ? '∞'
+                                    : (killTracker.totalKills(selectedKillPlayerID) / killTracker.totalDeaths(selectedKillPlayerID)).toFixed(2)
+                            }}</span>
+                            <span class="kf_kd_label">K/D</span>
+                        </div>
+                    </div>
+
+                    <!-- Two-column breakdown -->
+                    <div class="kf_columns">
+
+                        <!-- KILLED column -->
+                        <div class="kf_col">
+                            <div class="kf_col_header kf_col_header--kills">Killed</div>
+                            <div class="kf_matchup_list">
+                                <div
+                                    class="kf_matchup"
+                                    v-for="(m, i) in killTracker.killMatchups(selectedKillPlayerID)"
+                                    :key="'km'+i"
+                                >
+                                    <span class="kf_matchup_count">×{{ m.count }}</span>
+                                    <img v-if="m.weaponIcon" :src="m.weaponIcon" class="kf_weapon_icon" :title="m.weaponName" />
+                                    <span v-else class="kf_weapon_text">{{ m.weaponName }}</span>
+                                    <span class="kf_hs_badge" v-if="m.headShot" title="Headshot">💀</span>
+                                    <span class="kf_matchup_name" :class="m.opponentTeam === 0 ? 'kf_name--red' : 'kf_name--blue'">
+                                        {{ m.opponentName || `P${m.opponentID}` }}
+                                    </span>
+                                </div>
+                                <div class="kf_empty" v-if="killTracker.killMatchups(selectedKillPlayerID).length === 0">No kills yet</div>
+                            </div>
+                        </div>
+
+                        <!-- KILLED BY column -->
+                        <div class="kf_col">
+                            <div class="kf_col_header kf_col_header--deaths">Killed By</div>
+                            <div class="kf_matchup_list">
+                                <div
+                                    class="kf_matchup"
+                                    v-for="(m, i) in killTracker.deathMatchups(selectedKillPlayerID)"
+                                    :key="'dm'+i"
+                                >
+                                    <span class="kf_matchup_count">×{{ m.count }}</span>
+                                    <img v-if="m.weaponIcon" :src="m.weaponIcon" class="kf_weapon_icon" :title="m.weaponName" />
+                                    <span v-else class="kf_weapon_text">{{ m.weaponName }}</span>
+                                    <span class="kf_hs_badge" v-if="m.headShot" title="Headshot">💀</span>
+                                    <span class="kf_matchup_name" :class="m.opponentTeam === 0 ? 'kf_name--red' : 'kf_name--blue'">
+                                        {{ m.opponentName || `P${m.opponentID}` }}
+                                    </span>
+                                </div>
+                                <div class="kf_empty" v-if="killTracker.deathMatchups(selectedKillPlayerID).length === 0">No deaths yet</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </template>
+
+                <!-- No player selected -->
+                <p class="empty_msg" v-else-if="selectedKillPlayerID === -1">
+                    Select a player above to see their kill breakdown.
+                </p>
+                <p class="empty_msg" v-else>
+                    No kill data yet this match.
+                </p>
+
+                <!-- Recent event log -->
+                <div class="subsection" style="margin-top: 0.9em" v-if="killTracker.events.length > 0">
+                    <p class="subsection_label">Recent Events (newest first)</p>
+                    <div class="kf_log">
+                        <div
+                            class="kf_log_row"
+                            v-for="e in killTracker.recentEvents"
+                            :key="e.id"
+                        >
+                            <span class="kf_log_killer" :class="e.killerTeam === 0 ? 'kf_name--red' : 'kf_name--blue'">
+                                {{ e.killerName }}
+                            </span>
+                            <img v-if="e.weaponIcon" :src="e.weaponIcon" class="kf_weapon_icon kf_weapon_icon--sm" :title="e.weaponName" />
+                            <span v-else class="kf_weapon_text kf_weapon_text--sm">{{ e.weaponName }}</span>
+                            <span class="kf_hs_badge" v-if="e.headShot">💀</span>
+                            <span class="kf_log_victim" :class="e.victimTeam === 0 ? 'kf_name--red' : 'kf_name--blue'">
+                                {{ e.victimName }}
+                            </span>
+                            <span class="kf_log_streak" v-if="e.killStreak > 1">🔥{{ e.killStreak }}</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <!-- end Kills tab -->
+
         </div>
     </div>
 </template>
@@ -390,6 +523,7 @@ import { useKohZoneStore } from "@/stores/KohZoneStore";
 import { useKohScoreStore, showKohScores, type KohMode } from "@/stores/KohScoreStore";
 import { useMatchStateStore } from "@/stores/MatchStateStore";
 import { usePayloadTrackerStore, showPayloadOverlay, payloadChartType } from "@/stores/PayloadTrackerStore";
+import { useKillTrackerStore } from "@/stores/KillTrackerStore";
 import type { KohZone } from "@/interfaces/KohZone";
 
 // ── Panel open/close ──────────────────────────────────────────────────────────
@@ -405,7 +539,7 @@ onMounted(() => document.addEventListener("keydown", onKeyDown));
 onUnmounted(() => document.removeEventListener("keydown", onKeyDown));
 
 // ── Top-level tab ─────────────────────────────────────────────────────────────
-const topTab = ref<"settings" | "koh" | "payload">("settings");
+const topTab = ref<"settings" | "koh" | "payload" | "kills">("settings");
 
 // ── Payload tracker ───────────────────────────────────────────────────────────
 const payloadTracker = usePayloadTrackerStore();
@@ -430,6 +564,14 @@ const latestR2Distance = computed(() => {
 function formatVelocity(v: number | null): string {
     if (v === null) return "—";
     return (v >= 0 ? "+" : "") + v.toFixed(2);
+}
+
+// ── Kill tracker ──────────────────────────────────────────────────────────────
+const killTracker = useKillTrackerStore();
+const selectedKillPlayerID = ref<number>(-1);
+
+function clearKillLog() {
+    killTracker.events.splice(0);
 }
 
 // ── Settings logic ────────────────────────────────────────────────────────────
@@ -1269,5 +1411,201 @@ button:disabled { opacity: 0.25; cursor: not-allowed; }
 .checkpoint_pct {
     font-size: 0.85em;
     color: rgba(255,255,255,0.45);
+}
+
+// ── Kill feed tab ─────────────────────────────────────────────────────────────
+
+.kf_header_row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75em;
+}
+
+.kf_event_count {
+    font-size: 0.78em;
+    color: rgba(255,255,255,0.35);
+}
+
+// K/D summary bar
+.kf_kd_bar {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 0;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    margin-bottom: 1em;
+    overflow: hidden;
+}
+
+.kf_kd_stat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.6em 0.4em;
+
+    &--kills  { background: rgba(0,200,80,0.07); }
+    &--deaths { background: rgba(200,40,40,0.07); }
+}
+
+.kf_kd_num {
+    font-size: 1.55em;
+    font-weight: 800;
+    font-family: monospace;
+    color: #fff;
+    line-height: 1.1;
+}
+
+.kf_kd_label {
+    font-size: 0.65em;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: rgba(255,255,255,0.38);
+    margin-top: 0.15em;
+}
+
+.kf_kd_divider {
+    width: 1px;
+    background: rgba(255,255,255,0.08);
+    flex-shrink: 0;
+}
+
+// Two-column matchup layout
+.kf_columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6em;
+    margin-bottom: 0.5em;
+}
+
+.kf_col {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.kf_col_header {
+    font-size: 0.68em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.3em 0.5em;
+    border-radius: 3px 3px 0 0;
+    margin-bottom: 2px;
+
+    &--kills  { background: rgba(0,200,80,0.14);  color: #0c6; }
+    &--deaths { background: rgba(200,40,40,0.18); color: #f66; }
+}
+
+.kf_matchup_list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.kf_matchup {
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+    padding: 0.25em 0.4em;
+    background: rgba(255,255,255,0.04);
+    border-radius: 3px;
+    font-size: 0.82em;
+    min-width: 0;
+}
+
+.kf_matchup_count {
+    font-family: monospace;
+    font-weight: 700;
+    font-size: 0.9em;
+    color: rgba(255,255,255,0.55);
+    flex-shrink: 0;
+    min-width: 22px;
+}
+
+.kf_weapon_icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    filter: invert(1) opacity(0.7);
+    flex-shrink: 0;
+
+    &--sm {
+        width: 13px;
+        height: 13px;
+    }
+}
+
+.kf_weapon_text {
+    font-size: 0.75em;
+    color: rgba(255,255,255,0.45);
+    flex-shrink: 0;
+
+    &--sm { font-size: 0.7em; }
+}
+
+.kf_hs_badge {
+    font-size: 0.75em;
+    flex-shrink: 0;
+    opacity: 0.85;
+}
+
+.kf_matchup_name {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.kf_name--red  { color: #ff7272; }
+.kf_name--blue { color: #72aeff; }
+
+.kf_empty {
+    font-size: 0.78em;
+    color: rgba(255,255,255,0.25);
+    padding: 0.4em 0.5em;
+    font-style: italic;
+}
+
+// Event log
+.kf_log {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.kf_log_row {
+    display: flex;
+    align-items: center;
+    gap: 0.35em;
+    padding: 0.2em 0.4em;
+    background: rgba(255,255,255,0.03);
+    border-radius: 3px;
+    font-size: 0.8em;
+    min-width: 0;
+}
+
+.kf_log_killer,
+.kf_log_victim {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90px;
+}
+
+.kf_log_streak {
+    font-size: 0.8em;
+    margin-left: auto;
+    flex-shrink: 0;
+    color: rgba(255,200,80,0.9);
 }
 </style>
