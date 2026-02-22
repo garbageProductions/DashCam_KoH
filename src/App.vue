@@ -4,8 +4,8 @@
 	<instructions v-if="openHelp" />
 	<versionCheck />
 	<MenuPanel />
-	<!-- Headshot flash — full-window red border -->
-	<div class="headshot_flash" v-if="headshotFlash" />
+	<!-- Headshot flash — always in DOM, animated via class so it never steals focus -->
+	<div class="headshot_flash" :class="{ 'headshot_flash--active': headshotFlash }" />
 </template>
 
 <script setup lang="ts">
@@ -62,9 +62,13 @@ body {
 	inset: 0;
 	pointer-events: none;
 	z-index: 9999;
+	opacity: 0;
 	border: 6px solid #ff1a1a;
 	border-radius: 2px;
 	box-shadow: inset 0 0 40px rgba(255, 0, 0, 0.45);
+}
+
+.headshot_flash--active {
 	animation: flash_fade 0.35s ease-out forwards;
 }
 
