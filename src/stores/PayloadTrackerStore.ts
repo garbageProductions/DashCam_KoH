@@ -37,8 +37,6 @@ function saveCheckpoints(data: MapCheckpointData[]) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-// Velocity: slope over last N seconds of samples
-const VELOCITY_WINDOW_SEC = 5;
 
 export const usePayloadTrackerStore = defineStore("payloadTracker", () => {
     const matchStore = useMatchStateStore();
@@ -195,24 +193,22 @@ export const usePayloadTrackerStore = defineStore("payloadTracker", () => {
         currentRound.value = 1;
     }
 
-    // ── Velocity computation ──────────────────────────────────────────────────
-    // Compute velocity (distance units per second) from last VELOCITY_WINDOW_SEC
-    function computeVelocity(samples: PayloadSample[]): number | null {
+    // ── Pace computation ──────────────────────────────────────────────────────
+    // Estimated seconds remaining to reach 100%, based on the overall average
+    // rate (total distance covered / total elapsed time). Returns null until
+    // there's enough data, or 0 if the round is already complete.
+    function computeETA(samples: PayloadSample[]): number | null {
         if (samples.length < 2) return null;
-        const now = samples[samples.length - 1].time;
-        const windowStart = now - VELOCITY_WINDOW_SEC;
-        const windowed = samples.filter((s) => s.time >= windowStart);
-        if (windowed.length < 2) return null;
-
-        const first = windowed[0];
-        const last = windowed[windowed.length - 1];
-        const dt = last.time - first.time;
-        if (dt === 0) return null;
-        return (last.distance - first.distance) / dt;
+        const last = samples[samples.length - 1];
+        if (last.distance >= 100) return 0;
+        if (last.time === 0) return null;
+        const rate = last.distance / last.time; // % per second, overall average
+        if (rate <= 0) return null;
+        return (100 - last.distance) / rate;
     }
 
-    const round1Velocity = computed(() => computeVelocity(round1Samples.value));
-    const round2Velocity = computed(() => computeVelocity(round2Samples.value));
+    const round1ETA = computed(() => computeETA(round1Samples.value));
+    const round2ETA = computed(() => computeETA(round2Samples.value));
 
     // ── Active map checkpoint ─────────────────────────────────────────────────
     const activeMapCheckpoint = computed(() => {
@@ -229,8 +225,8 @@ export const usePayloadTrackerStore = defineStore("payloadTracker", () => {
         currentRound,
         lastCheckpointDistance,
         activeMapCheckpoint,
-        round1Velocity,
-        round2Velocity,
+        round1ETA,
+        round2ETA,
         round1TeamName,
         round2TeamName,
         getCheckpoint,

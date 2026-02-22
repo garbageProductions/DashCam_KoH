@@ -10,13 +10,13 @@
             <span class="overlay_title">Payload Pace</span>
             <span class="overlay_map">{{ matchStore.MatchInfo.mapName }}</span>
             <div class="vel_chips">
-                <div class="vel_chip vel_chip--r1" v-if="tracker.round1Velocity !== null">
+                <div class="vel_chip vel_chip--r1" v-if="tracker.round1ETA !== null">
                     <span class="vel_label">{{ r1TeamName }}</span>
-                    <span class="vel_val">{{ formatVelocity(tracker.round1Velocity) }}<span class="vel_unit">%/s</span></span>
+                    <span class="vel_val">{{ formatETA(tracker.round1ETA) }}</span>
                 </div>
-                <div class="vel_chip vel_chip--r2" v-if="tracker.round2Velocity !== null">
+                <div class="vel_chip vel_chip--r2" v-if="tracker.round2ETA !== null">
                     <span class="vel_label">{{ r2TeamName }}</span>
-                    <span class="vel_val">{{ formatVelocity(tracker.round2Velocity) }}<span class="vel_unit">%/s</span></span>
+                    <span class="vel_val">{{ formatETA(tracker.round2ETA) }}</span>
                 </div>
                 <span class="vel_lead" v-if="leadText">{{ leadText }}</span>
             </div>
@@ -350,9 +350,12 @@ const redRacePos = computed(() => {
     return s.length > 0 ? s[s.length - 1].distance : 0;
 });
 
-function formatVelocity(v: number | null): string {
-    if (v === null) return "—";
-    return (v >= 0 ? "+" : "") + v.toFixed(2);
+function formatETA(eta: number | null): string {
+    if (eta === null) return "—";
+    if (eta === 0) return "DONE";
+    const s = Math.round(eta);
+    if (s < 60) return `${s}s`;
+    return `${Math.floor(s / 60)}m ${s % 60}s`;
 }
 </script>
 
