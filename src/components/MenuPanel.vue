@@ -36,6 +36,13 @@
             <!-- ══ SETTINGS TAB ══════════════════════════════════════ -->
             <div class="tab_content" v-show="topTab === 'settings'">
                 <div class="section">
+                    <h2>Overlays</h2>
+                    <label class="toggle_row">
+                        <input type="checkbox" v-model="headshotFlashEnabled" />
+                        Headshot border flash
+                    </label>
+                </div>
+                <div class="section">
                     <h2>Team Icon</h2>
                     <div id="iconURL">
                         <div class="radio_group">
@@ -525,7 +532,7 @@ import { useMatchStateStore } from "@/stores/MatchStateStore";
 import { usePayloadTrackerStore, showPayloadOverlay, payloadChartType } from "@/stores/PayloadTrackerStore";
 import { useKillTrackerStore } from "@/stores/KillTrackerStore";
 import type { KohZone } from "@/interfaces/KohZone";
-import { isMenuOpen } from "@/stores/UiState";
+import { isMenuOpen, headshotFlashEnabled } from "@/stores/UiState";
 
 // ── Panel open/close — driven by module-level ref in UiState ──────────────────
 const isOpen = isMenuOpen;
@@ -847,6 +854,23 @@ async function exportJson() {
         color: rgba(255, 255, 255, 0.5);
         text-transform: uppercase;
         letter-spacing: 0.08em;
+    }
+}
+
+.toggle_row {
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    font-size: 0.88em;
+    color: rgba(255, 255, 255, 0.75);
+    cursor: pointer;
+    user-select: none;
+
+    input[type="checkbox"] {
+        width: 14px;
+        height: 14px;
+        accent-color: #72aeff;
+        cursor: pointer;
     }
 }
 

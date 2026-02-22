@@ -40,7 +40,9 @@ onMounted(() => {
 	state.$reset();
 	initStore();
 	createWebsocketManager();
-	document.addEventListener("keydown", onKeyDown);
+	// window.focus() ensures OBS browser source receives keyboard events
+	window.focus();
+	window.addEventListener("keydown", onKeyDown);
 });
 </script>
 
