@@ -1,6 +1,7 @@
 import {
 	KillFeedLayout,
 	LoadoutUpdateLayout,
+	MatchStartLayout,
 	PlayerJoinsLayout,
 	PlayerLeavesLayout,
 	PlayerPositionLayout,
@@ -112,7 +113,9 @@ function getClanName() {
 
 	const redPlayersCount = {} as { [key: string]: number };
 	let redMaxCount = 0;
-	let redMaxString = "red";
+	// Fall back to existing name so we don't clobber a matchStart-provided
+	// team name with the literal "red" when no clan tags are available yet.
+	let redMaxString = state.TeamData.red.name || "red";
 
 	for (let i = 0; i < redPlayers.length; i++) {
 		if (redPlayersCount[redPlayers[i]]) {
@@ -142,7 +145,8 @@ function getClanName() {
 
 	const bluePlayersCount = {} as { [key: string]: number };
 	let blueMaxCount = 0;
-	let blueMaxString = "blue";
+	// Same: preserve existing name when no clan tags available yet.
+	let blueMaxString = state.TeamData.blue.name || "blue";
 
 	for (let i = 0; i < bluePlayers.length; i++) {
 		if (bluePlayersCount[bluePlayers[i]]) {
@@ -240,9 +244,15 @@ function scoreboard(socketData: any) {
 
 EventMatchStart.subscribe(matchStart);
 
-function matchStart(socketData: any) {
+function matchStart(socketData: MatchStartLayout) {
 	state.MatchInfo.matchType = socketData.matchType;
 	state.MatchInfo.mapName = socketData.mapName;
+	// Use the authoritative team names sent by the game at match start.
+	// These are set before any players join, so they won't be overwritten
+	// by getClanName() until players arrive — and getClanName() falls back
+	// to "red"/"blue" only when no clan tags exist, so explicit names win.
+	if (socketData.redTeamName)  state.TeamData.red.name  = socketData.redTeamName;
+	if (socketData.blueTeamName) state.TeamData.blue.name = socketData.blueTeamName;
 }
 
 EventTimer.subscribe(timer);
