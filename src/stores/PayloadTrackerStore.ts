@@ -75,10 +75,14 @@ export const usePayloadTrackerStore = defineStore("payloadTracker", () => {
     let roundStartWallTime = 0; // performance.now() when this round began
     const lastCheckpointDistance = ref<number | null>(null);
 
-    // Snapshot team names at the moment each round starts so labels
-    // don't flip when the game swaps teams at halftime.
+    // Team names are snapshotted from TeamData on the first payload sample
+    // of each round — by then matchStart + playerJoins have both fired and
+    // TeamData has the real names. Blue always pushes R1, red always pushes R2
+    // (cartBlockedByRed / amountBlueOnCart are fixed-color throughout).
     const round1TeamName = ref<string>("");
     const round2TeamName = ref<string>("");
+    let round1NameLocked = false;
+    let round2NameLocked = false;
 
     // ── Auto-detect checkpoint ────────────────────────────────────────────────
     let wasCheckpoint = false;
@@ -125,8 +129,20 @@ export const usePayloadTrackerStore = defineStore("payloadTracker", () => {
             };
 
             if (currentRound.value === 1) {
+                // Lock R1 name on first sample — by now matchStart and
+                // playerJoins have both fired so TeamData.blue.name is real.
+                if (!round1NameLocked) {
+                    round1TeamName.value = matchStore.TeamData.blue.name || "Blue";
+                    round2TeamName.value = matchStore.TeamData.red.name  || "Red";
+                    round1NameLocked = true;
+                }
                 round1Samples.value.push(sample);
             } else {
+                // Lock R2 name on first R2 sample (belt-and-suspenders).
+                if (!round2NameLocked) {
+                    round2TeamName.value = matchStore.TeamData.red.name || "Red";
+                    round2NameLocked = true;
+                }
                 round2Samples.value.push(sample);
             }
 
@@ -154,12 +170,10 @@ export const usePayloadTrackerStore = defineStore("payloadTracker", () => {
         isRecording.value = true;
         wasCheckpoint = false;
         lastCheckpointDistance.value = null;
-        // In payload R1: blue pushes (amountBlueOnCart / cartBlockedByRed are
-        // always relative to fixed team colors). Snapshot both names now —
-        // R1 pusher = blue, R1 defender = red. These never change after this.
-        round1TeamName.value = matchStore.TeamData.blue.name || "Blue";
-        // R2 pusher will be the red team (they swap sides, red now pushes).
-        round2TeamName.value = matchStore.TeamData.red.name || "Red";
+        round1TeamName.value = "";
+        round2TeamName.value = "";
+        round1NameLocked = false;
+        round2NameLocked = false;
     }
 
     function stopRecording() {
