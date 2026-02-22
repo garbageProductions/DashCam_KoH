@@ -329,16 +329,16 @@
                             <span class="payload_stat_label">Blue (R1)</span>
                             <span class="payload_stat_val">{{ latestR1Distance }}%</span>
                             <span class="payload_stat_sub">{{ payloadTracker.round1Samples.length }} samples</span>
-                            <span class="payload_stat_vel" v-if="payloadTracker.round1Velocity !== null">
-                                {{ formatVelocity(payloadTracker.round1Velocity) }}%/s
+                            <span class="payload_stat_vel" v-if="payloadTracker.round1ETA !== null">
+                                ETA {{ formatETA(payloadTracker.round1ETA) }}
                             </span>
                         </div>
                         <div class="payload_stat payload_stat--red">
                             <span class="payload_stat_label">Red (R2)</span>
                             <span class="payload_stat_val">{{ latestR2Distance }}%</span>
                             <span class="payload_stat_sub">{{ payloadTracker.round2Samples.length }} samples</span>
-                            <span class="payload_stat_vel" v-if="payloadTracker.round2Velocity !== null">
-                                {{ formatVelocity(payloadTracker.round2Velocity) }}%/s
+                            <span class="payload_stat_vel" v-if="payloadTracker.round2ETA !== null">
+                                ETA {{ formatETA(payloadTracker.round2ETA) }}
                             </span>
                         </div>
                     </div>
@@ -557,9 +557,12 @@ const latestR2Distance = computed(() => {
     return s.length > 0 ? s[s.length - 1].distance.toFixed(1) : "0.0";
 });
 
-function formatVelocity(v: number | null): string {
-    if (v === null) return "—";
-    return (v >= 0 ? "+" : "") + v.toFixed(2);
+function formatETA(eta: number | null): string {
+    if (eta === null) return "—";
+    if (eta === 0) return "DONE";
+    const s = Math.round(eta);
+    if (s < 60) return `${s}s`;
+    return `${Math.floor(s / 60)}m ${s % 60}s`;
 }
 
 // ── Kill tracker ──────────────────────────────────────────────────────────────
