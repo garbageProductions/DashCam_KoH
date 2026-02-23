@@ -19,6 +19,7 @@ import {
 	useMatchStateStore,
 } from "@/stores/MatchStateStore";
 import { useSettingStore } from "../stores/SettingsStore";
+import { useDominationTrackerStore } from "@/stores/DominationTrackerStore";
 import {
 	EventAnnouncer,
 	EventControlPoint,
@@ -46,11 +47,13 @@ import cloneDeep from "lodash.clonedeep";
 let state: ReturnType<typeof useMatchStateStore>;
 let stateSettings: ReturnType<typeof useSettingStore>;
 let freezeStore: ReturnType<typeof useMatchStateFreezeStore>;
+let domTracker: ReturnType<typeof useDominationTrackerStore>;
 
 export function initStore() {
 	state = useMatchStateStore();
 	stateSettings = useSettingStore();
 	freezeStore = useMatchStateFreezeStore();
+	domTracker = useDominationTrackerStore();
 }
 
 EventPlayerJoins.subscribe(playerJoins);
@@ -282,6 +285,8 @@ function payload(socketData: any) {
 EventDomination.subscribe(domination);
 
 function domination(socketData: any) {
+	domTracker.onDomination(socketData.scores, socketData.isScoring, socketData.countDownTimer);
+
 	state.MatchInfo.domination.countDownTimer = socketData.countDownTimer;
 	state.MatchInfo.domination.pointA = socketData.scores[0];
 	state.MatchInfo.domination.pointB = socketData.scores[1];
@@ -343,6 +348,7 @@ function SetupFreezeStore() {
 EventSceneChange.subscribe(cleanData);
 
 function cleanData(socketData: SceneChangeLayout) {
+	domTracker.reset();
 	state.$reset();
 
 	// game scene or menu scene

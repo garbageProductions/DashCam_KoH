@@ -31,6 +31,11 @@
                     :class="{ 'tab_btn--active': topTab === 'kills' }"
                     @click="topTab = 'kills'"
                 >🔫 Kills</button>
+                <button
+                    class="tab_btn"
+                    :class="{ 'tab_btn--active': topTab === 'dom' }"
+                    @click="topTab = 'dom'"
+                >🎯 Dom</button>
             </div>
 
             <!-- ══ SETTINGS TAB ══════════════════════════════════════ -->
@@ -517,6 +522,93 @@
 
             </div>
             <!-- end Kills tab -->
+            <!-- ══ DOM TAB ══════════════════════════════════════════════ -->
+            <div class="tab_content" v-show="topTab === 'dom'">
+
+                <!-- Status + reset row -->
+                <div class="kf_header_row">
+                    <span class="kf_event_count">{{ domTracker.captureLog.length }} captures this match</span>
+                    <button class="btn_reset" style="font-size:0.78em" @click="domTracker.reset()">Reset</button>
+                </div>
+
+                <!-- Point state badges -->
+                <div class="dom_point_row">
+                    <div class="dom_point" :class="domPointClass(domTracker.captureLog, 'A', matchStore.MatchInfo.domination.pointA)">
+                        <span class="dom_point_label">A</span>
+                        <span class="dom_point_team">{{ teamLabel(matchStore.MatchInfo.domination.pointA) }}</span>
+                        <div class="dom_point_stats">
+                            <span class="dom_point_stat"><span class="dom_point_stat_num">{{ domTracker.pointCaptures.A }}</span><span class="dom_point_stat_label">cap</span></span>
+                            <span class="dom_point_stat"><span class="dom_point_stat_num">{{ domTracker.pointCounters.A }}</span><span class="dom_point_stat_label">ctr</span></span>
+                        </div>
+                    </div>
+                    <div class="dom_point" :class="domPointClass(domTracker.captureLog, 'B', matchStore.MatchInfo.domination.pointB)">
+                        <span class="dom_point_label">B</span>
+                        <span class="dom_point_team">{{ teamLabel(matchStore.MatchInfo.domination.pointB) }}</span>
+                        <div class="dom_point_stats">
+                            <span class="dom_point_stat"><span class="dom_point_stat_num">{{ domTracker.pointCaptures.B }}</span><span class="dom_point_stat_label">cap</span></span>
+                            <span class="dom_point_stat"><span class="dom_point_stat_num">{{ domTracker.pointCounters.B }}</span><span class="dom_point_stat_label">ctr</span></span>
+                        </div>
+                    </div>
+                    <div class="dom_point" :class="domPointClass(domTracker.captureLog, 'C', matchStore.MatchInfo.domination.pointC)">
+                        <span class="dom_point_label">C</span>
+                        <span class="dom_point_team">{{ teamLabel(matchStore.MatchInfo.domination.pointC) }}</span>
+                        <div class="dom_point_stats">
+                            <span class="dom_point_stat"><span class="dom_point_stat_num">{{ domTracker.pointCaptures.C }}</span><span class="dom_point_stat_label">cap</span></span>
+                            <span class="dom_point_stat"><span class="dom_point_stat_num">{{ domTracker.pointCounters.C }}</span><span class="dom_point_stat_label">ctr</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Captures section -->
+                <div class="section">
+                    <h2>Captures</h2>
+                    <div class="dom_stat_row">
+                        <div class="dom_stat dom_stat--blue">
+                            <span class="dom_stat_num">{{ domTracker.blueCaptures }}</span>
+                            <span class="dom_stat_label">Blue</span>
+                        </div>
+                        <div class="dom_stat_divider"></div>
+                        <div class="dom_stat dom_stat--red">
+                            <span class="dom_stat_num">{{ domTracker.redCaptures }}</span>
+                            <span class="dom_stat_label">Red</span>
+                        </div>
+                    </div>
+
+                    <!-- Capture log -->
+                    <div class="dom_log" v-if="domTracker.captureLog.length > 0">
+                        <div
+                            class="dom_log_row"
+                            v-for="e in domTracker.captureLog"
+                            :key="e.id"
+                        >
+                            <span class="dom_log_point">{{ e.point }}</span>
+                            <span class="dom_log_from" :class="e.fromTeam === 0 ? 'kf_name--red' : e.fromTeam === 1 ? 'kf_name--blue' : 'dom_name--none'">{{ teamLabel(e.fromTeam) }}</span>
+                            <span class="dom_log_arrow">→</span>
+                            <span class="dom_log_to" :class="e.toTeam === 0 ? 'kf_name--red' : e.toTeam === 1 ? 'kf_name--blue' : 'dom_name--none'">{{ teamLabel(e.toTeam) }}</span>
+                        </div>
+                    </div>
+                    <p class="empty_msg" v-else>No captures yet.</p>
+                </div>
+
+                <!-- Counters section -->
+                <div class="section">
+                    <h2>Counters</h2>
+                    <div class="dom_stat_row">
+                        <div class="dom_stat dom_stat--blue">
+                            <span class="dom_stat_num">{{ domTracker.blueCounters }}</span>
+                            <span class="dom_stat_label">Blue</span>
+                        </div>
+                        <div class="dom_stat_divider"></div>
+                        <div class="dom_stat dom_stat--red">
+                            <span class="dom_stat_num">{{ domTracker.redCounters }}</span>
+                            <span class="dom_stat_label">Red</span>
+                        </div>
+                    </div>
+                    <p class="hint" style="margin-top:0.4em">A counter is recorded when a team holds all 3 points but loses one before the 5-second timer expires.</p>
+                </div>
+
+            </div>
+            <!-- end Dom tab -->
 
         </div>
     </div>
@@ -533,9 +625,26 @@ import { usePayloadTrackerStore, showPayloadOverlay, payloadChartType } from "@/
 import { useKillTrackerStore } from "@/stores/KillTrackerStore";
 import type { KohZone } from "@/interfaces/KohZone";
 import { isMenuOpen, headshotFlashEnabled } from "@/stores/UiState";
+import { useDominationTrackerStore } from "@/stores/DominationTrackerStore";
+import { Teams } from "@/interfaces/StoreInterfaces/MatchInfo";
 
 // ── Top-level tab ─────────────────────────────────────────────────────────────
-const topTab = ref<"settings" | "koh" | "payload" | "kills">("settings");
+const topTab = ref<"settings" | "koh" | "payload" | "kills" | "dom">("settings");
+
+// ── Domination tracker ──────────────────────────────────────────────────────────────────
+const domTracker = useDominationTrackerStore();
+
+function teamLabel(team: Teams): string {
+    if (team === Teams.blue) return 'Blue';
+    if (team === Teams.red)  return 'Red';
+    return '—';
+}
+
+function domPointClass(_log: any, _point: string, team: Teams): string {
+    if (team === Teams.blue) return 'dom_point--blue';
+    if (team === Teams.red)  return 'dom_point--red';
+    return 'dom_point--none';
+}
 
 // ── Payload tracker ───────────────────────────────────────────────────────────
 const payloadTracker = usePayloadTrackerStore();
@@ -1624,4 +1733,161 @@ button:disabled { opacity: 0.25; cursor: not-allowed; }
     flex-shrink: 0;
     color: rgba(255,200,80,0.9);
 }
+
+// ── Domination tab styles ───────────────────────────────────────────────────────────────
+
+.dom_point_row {
+    display: flex;
+    gap: 0.5em;
+    margin-bottom: 1em;
+    justify-content: space-between;
+}
+
+.dom_point {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5em;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+
+    &--blue { border-color: rgba(100,160,255,0.5); background: rgba(0,69,255,0.15); }
+    &--red  { border-color: rgba(255,100,100,0.5); background: rgba(255,0,0,0.15); }
+    &--none { opacity: 0.4; }
+}
+
+.dom_point_label {
+    font-size: 1.1em;
+    font-weight: 800;
+    font-family: monospace;
+    color: #fff;
+}
+
+.dom_point_team {
+    font-size: 0.65em;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.55);
+    margin-top: 2px;
+}
+
+.dom_stat_row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 0.6em;
+}
+
+.dom_stat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5em 0.4em;
+
+    &--blue { background: rgba(0,69,255,0.12); }
+    &--red  { background: rgba(255,0,0,0.12); }
+}
+
+.dom_stat_num {
+    font-size: 1.55em;
+    font-weight: 800;
+    font-family: monospace;
+    color: #fff;
+    line-height: 1.1;
+}
+
+.dom_stat_label {
+    font-size: 0.65em;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.38);
+    margin-top: 0.15em;
+}
+
+.dom_stat_divider {
+    width: 1px;
+    align-self: stretch;
+    background: rgba(255,255,255,0.08);
+    flex-shrink: 0;
+}
+
+.dom_log {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 0.4em;
+}
+
+.dom_log_row {
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    padding: 0.22em 0.5em;
+    background: rgba(255,255,255,0.03);
+    border-radius: 3px;
+    font-size: 0.82em;
+}
+
+.dom_log_point {
+    font-family: monospace;
+    font-weight: 800;
+    font-size: 1em;
+    color: #fff;
+    min-width: 12px;
+    text-align: center;
+}
+
+.dom_log_from,
+.dom_log_to {
+    font-weight: 600;
+    min-width: 28px;
+}
+
+.dom_log_arrow {
+    color: rgba(255,255,255,0.3);
+    font-size: 0.85em;
+}
+
+.dom_name--none { color: rgba(255,255,255,0.3); }
+.dom_point_stats {
+    display: flex;
+    gap: 0.6em;
+    margin-top: 0.35em;
+    padding-top: 0.3em;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    width: 100%;
+    justify-content: center;
+}
+
+.dom_point_stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+}
+
+.dom_point_stat_num {
+    font-family: monospace;
+    font-size: 0.95em;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+}
+
+.dom_point_stat_label {
+    font-size: 0.55em;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.35);
+}
+
 </style>

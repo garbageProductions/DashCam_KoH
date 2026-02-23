@@ -46,15 +46,28 @@
 				</div>
 			</div>
 		</div>
+		<!-- CAP / CTR stats only visible in domination mode -->
+		<div class="dom_stats_row" v-if="matchInfo.matchType === MatchType.Domination">
+			<div class="dom_stats dom_stats--blue">
+				<span>CAP {{ domTracker.blueCaptures }}</span>
+				<span>CTR {{ domTracker.blueCounters }}</span>
+			</div>
+			<div class="dom_stats_spacer"></div>
+			<div class="dom_stats dom_stats--red">
+				<span>CAP {{ domTracker.redCaptures }}</span>
+				<span>CTR {{ domTracker.redCounters }}</span>
+			</div>
+		</div>
 	</div>
 </template>
 
 <style scoped lang="css">
 .scoreboard {
 	display: flex;
+	flex-direction: column;
+	align-items: center;
 	grid-column: 2;
 	grid-row: 1;
-	justify-content: center;
 }
 
 .scoreboard_wrapper {
@@ -162,6 +175,31 @@
 .mode--red.mode--domination {
 	padding-left: 28px;
 }
+
+
+.dom_stats_row {
+	display: flex;
+	width: 523px;
+	justify-content: space-between;
+	padding: 3px 30px 0;
+	box-sizing: border-box;
+}
+
+.dom_stats_spacer { flex: 1; }
+
+.dom_stats {
+	display: flex;
+	gap: 10px;
+	font-size: 9px;
+	font-weight: 700;
+	font-family: monospace;
+	letter-spacing: 0.07em;
+	text-transform: uppercase;
+	opacity: 0.85;
+}
+
+.dom_stats--blue { color: #72b4ff; }
+.dom_stats--red  { color: #ff9090; }
 </style>
 
 <script setup lang="ts">
@@ -170,11 +208,13 @@ import { AnnouncerTypes, MatchType, Teams } from "@/interfaces/StoreInterfaces/M
 import Bar from "./Bar.vue";
 import { useMatchStateStore } from "@/stores/MatchStateStore";
 import { useKohScoreStore, showKohScores } from "@/stores/KohScoreStore";
+import { useDominationTrackerStore } from "@/stores/DominationTrackerStore";
 import { EventAnnouncer } from "@/HyperBashLogic/HyperBashEvents";
 import { AnnouncerLayout } from "@/interfaces/HyperBashMessages.interface";
 import { PlayerStateInfo } from "@/interfaces/StoreInterfaces/StoreState";
 
 const kohScore = useKohScoreStore();
+const domTracker = useDominationTrackerStore();
 
 const state = useMatchStateStore();
 let customTimer = ref(0);
