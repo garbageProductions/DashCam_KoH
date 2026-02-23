@@ -16,5 +16,13 @@ export const useSettingStore = defineStore("settings", () => {
 		iconMode: iconModes.dashLeague,
 	} as DashCamSettings);
 
-	return { Version, IconSettings, WebsocketStatus };
+	// Team name overrides — null means "Auto" (follow clan-tag detection)
+	const redTeamOverride  = ref<string | null>(null);
+	const blueTeamOverride = ref<string | null>(null);
+
+	// All unique clan-tag names seen this match, per team
+	const redTeamCandidates  = ref<string[]>([]);
+	const blueTeamCandidates = ref<string[]>([]);
+
+	return { Version, IconSettings, WebsocketStatus, redTeamOverride, blueTeamOverride, redTeamCandidates, blueTeamCandidates };
 });

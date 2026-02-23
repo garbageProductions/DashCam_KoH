@@ -20,6 +20,7 @@ import {
 } from "@/stores/MatchStateStore";
 import { useSettingStore } from "../stores/SettingsStore";
 import { useDominationTrackerStore } from "@/stores/DominationTrackerStore";
+import { useControlPointTrackerStore } from "@/stores/ControlPointTrackerStore";
 import {
 	EventAnnouncer,
 	EventControlPoint,
@@ -48,12 +49,14 @@ let state: ReturnType<typeof useMatchStateStore>;
 let stateSettings: ReturnType<typeof useSettingStore>;
 let freezeStore: ReturnType<typeof useMatchStateFreezeStore>;
 let domTracker: ReturnType<typeof useDominationTrackerStore>;
+let cpTracker: ReturnType<typeof useControlPointTrackerStore>;
 
 export function initStore() {
 	state = useMatchStateStore();
 	stateSettings = useSettingStore();
 	freezeStore = useMatchStateFreezeStore();
 	domTracker = useDominationTrackerStore();
+	cpTracker  = useControlPointTrackerStore();
 }
 
 EventPlayerJoins.subscribe(playerJoins);
@@ -114,10 +117,16 @@ function getClanName() {
 		);
 	}).map((v) => v.clan);
 
+	// Collect all unique red clan names as candidates for the dropdown
+	const uniqueRed = [...new Set(redPlayers)];
+	if (uniqueRed.length > 0) {
+		// Merge with existing candidates so names aren't lost when a player leaves
+		const merged = [...new Set([...stateSettings.redTeamCandidates, ...uniqueRed])];
+		stateSettings.redTeamCandidates = merged;
+	}
+
 	const redPlayersCount = {} as { [key: string]: number };
 	let redMaxCount = 0;
-	// Fall back to existing name so we don't clobber a matchStart-provided
-	// team name with the literal "red" when no clan tags are available yet.
 	let redMaxString = state.TeamData.red.name || "red";
 
 	for (let i = 0; i < redPlayers.length; i++) {
@@ -133,8 +142,11 @@ function getClanName() {
 		}
 	}
 
-	if (state.TeamData.red.name != redMaxString) {
-		state.TeamData.red.name = redMaxString;
+	// Only auto-update if the user has not locked in an override
+	if (stateSettings.redTeamOverride === null) {
+		if (state.TeamData.red.name != redMaxString) {
+			state.TeamData.red.name = redMaxString;
+		}
 	}
 
 	var bluePlayers = state.PlayerData.filter((player) => {
@@ -146,9 +158,15 @@ function getClanName() {
 		);
 	}).map((e) => e.clan);
 
+	// Collect all unique blue clan names as candidates
+	const uniqueBlue = [...new Set(bluePlayers)];
+	if (uniqueBlue.length > 0) {
+		const merged = [...new Set([...stateSettings.blueTeamCandidates, ...uniqueBlue])];
+		stateSettings.blueTeamCandidates = merged;
+	}
+
 	const bluePlayersCount = {} as { [key: string]: number };
 	let blueMaxCount = 0;
-	// Same: preserve existing name when no clan tags available yet.
 	let blueMaxString = state.TeamData.blue.name || "blue";
 
 	for (let i = 0; i < bluePlayers.length; i++) {
@@ -164,9 +182,16 @@ function getClanName() {
 		}
 	}
 
-	if (state.TeamData.blue.name != blueMaxString) {
-		state.TeamData.blue.name = blueMaxString;
+	if (stateSettings.blueTeamOverride === null) {
+		if (state.TeamData.blue.name != blueMaxString) {
+			state.TeamData.blue.name = blueMaxString;
+		}
 	}
+}
+
+// Exported so the Settings panel can force a refresh when clearing an override
+export function refreshTeamNames() {
+	getClanName();
 }
 
 EventPlayerPosition.subscribe(playerPos);
@@ -254,8 +279,9 @@ function matchStart(socketData: MatchStartLayout) {
 	// These are set before any players join, so they won't be overwritten
 	// by getClanName() until players arrive — and getClanName() falls back
 	// to "red"/"blue" only when no clan tags exist, so explicit names win.
-	if (socketData.redTeamName)  state.TeamData.red.name  = socketData.redTeamName;
-	if (socketData.blueTeamName) state.TeamData.blue.name = socketData.blueTeamName;
+	// Only apply game-provided names when the user has not locked in an override
+	if (socketData.redTeamName  && stateSettings.redTeamOverride  === null) state.TeamData.red.name  = socketData.redTeamName;
+	if (socketData.blueTeamName && stateSettings.blueTeamOverride === null) state.TeamData.blue.name = socketData.blueTeamName;
 }
 
 EventTimer.subscribe(timer);
@@ -299,6 +325,7 @@ function domination(socketData: any) {
 EventControlPoint.subscribe(controlPoint);
 
 function controlPoint(socketData: any) {
+	cpTracker.onControlPoint(socketData.controllingTeam);
 	state.MatchInfo.controlPoint.TeamScoringPoints = socketData.controllingTeam;
 }
 
@@ -349,6 +376,10 @@ EventSceneChange.subscribe(cleanData);
 
 function cleanData(socketData: SceneChangeLayout) {
 	domTracker.reset();
+	cpTracker.reset();
+	// Clear candidate lists so they rebuild fresh for the next match
+	stateSettings.redTeamCandidates  = [];
+	stateSettings.blueTeamCandidates = [];
 	state.$reset();
 
 	// game scene or menu scene

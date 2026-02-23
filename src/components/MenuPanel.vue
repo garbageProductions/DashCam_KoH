@@ -36,10 +36,52 @@
                     :class="{ 'tab_btn--active': topTab === 'dom' }"
                     @click="topTab = 'dom'"
                 >🎯 Dom</button>
+                <button
+                    class="tab_btn"
+                    :class="{ 'tab_btn--active': topTab === 'cp' }"
+                    @click="topTab = 'cp'"
+                >⚑ CP</button>
             </div>
 
             <!-- ══ SETTINGS TAB ══════════════════════════════════════ -->
             <div class="tab_content" v-show="topTab === 'settings'">
+
+                <div class="section">
+                    <h2>Team Names</h2>
+
+                    <!-- Red team -->
+                    <div class="form_row">
+                        <label class="label--red">Red</label>
+                        <select v-model="redSelectMode" @change="onRedModeChange">
+                            <option value="">— Auto —</option>
+                            <option v-for="name in settingState.redTeamCandidates" :key="name" :value="name">{{ name }}</option>
+                            <option value="__CUSTOM__">✎ Custom…</option>
+                        </select>
+                    </div>
+                    <div class="form_row" v-if="redIsCustom">
+                        <label></label>
+                        <input type="text" v-model="redCustomInput" placeholder="Enter red team name" @input="onRedCustomInput" />
+                    </div>
+
+                    <!-- Blue team -->
+                    <div class="form_row">
+                        <label class="label--blue">Blue</label>
+                        <select v-model="blueSelectMode" @change="onBlueModeChange">
+                            <option value="">— Auto —</option>
+                            <option v-for="name in settingState.blueTeamCandidates" :key="name" :value="name">{{ name }}</option>
+                            <option value="__CUSTOM__">✎ Custom…</option>
+                        </select>
+                    </div>
+                    <div class="form_row" v-if="blueIsCustom">
+                        <label></label>
+                        <input type="text" v-model="blueCustomInput" placeholder="Enter blue team name" @input="onBlueCustomInput" />
+                    </div>
+
+                    <p class="hint" v-if="settingState.redTeamCandidates.length === 0 && settingState.blueTeamCandidates.length === 0">
+                        Candidate names appear here as players connect.
+                    </p>
+                </div>
+
                 <div class="section">
                     <h2>Overlays</h2>
                     <label class="toggle_row">
@@ -562,16 +604,13 @@
                 <!-- Captures section -->
                 <div class="section">
                     <h2>Captures</h2>
-                    <div class="dom_stat_row">
-                        <div class="dom_stat dom_stat--blue">
-                            <span class="dom_stat_num">{{ domTracker.blueCaptures }}</span>
-                            <span class="dom_stat_label">Blue</span>
+                    <div class="dom_tug_bar">
+                        <span class="dom_tug_val dom_tug_val--blue">{{ domTracker.blueCaptures }}</span>
+                        <div class="dom_tug_track">
+                            <div class="dom_tug_fill dom_tug_fill--blue" :style="{ width: captureBluePercent + '%' }"></div>
+                            <div class="dom_tug_fill dom_tug_fill--red" :style="{ width: captureRedPercent + '%' }"></div>
                         </div>
-                        <div class="dom_stat_divider"></div>
-                        <div class="dom_stat dom_stat--red">
-                            <span class="dom_stat_num">{{ domTracker.redCaptures }}</span>
-                            <span class="dom_stat_label">Red</span>
-                        </div>
+                        <span class="dom_tug_val dom_tug_val--red">{{ domTracker.redCaptures }}</span>
                     </div>
 
                     <!-- Capture log -->
@@ -593,22 +632,45 @@
                 <!-- Counters section -->
                 <div class="section">
                     <h2>Counters</h2>
-                    <div class="dom_stat_row">
-                        <div class="dom_stat dom_stat--blue">
-                            <span class="dom_stat_num">{{ domTracker.blueCounters }}</span>
-                            <span class="dom_stat_label">Blue</span>
+                    <div class="dom_tug_bar">
+                        <span class="dom_tug_val dom_tug_val--blue">{{ domTracker.blueCounters }}</span>
+                        <div class="dom_tug_track">
+                            <div class="dom_tug_fill dom_tug_fill--blue" :style="{ width: counterBluePercent + '%' }"></div>
+                            <div class="dom_tug_fill dom_tug_fill--red" :style="{ width: counterRedPercent + '%' }"></div>
                         </div>
-                        <div class="dom_stat_divider"></div>
-                        <div class="dom_stat dom_stat--red">
-                            <span class="dom_stat_num">{{ domTracker.redCounters }}</span>
-                            <span class="dom_stat_label">Red</span>
-                        </div>
+                        <span class="dom_tug_val dom_tug_val--red">{{ domTracker.redCounters }}</span>
                     </div>
                     <p class="hint" style="margin-top:0.4em">A counter is recorded when a team holds all 3 points but loses one before the 5-second timer expires.</p>
                 </div>
 
             </div>
             <!-- end Dom tab -->
+
+            <!-- ══ CP TAB ═══════════════════════════════════════════════ -->
+            <div class="tab_content" v-show="topTab === 'cp'">
+
+                <!-- Status + reset row -->
+                <div class="kf_header_row">
+                    <span class="kf_event_count">{{ cpTracker.blueCaptures + cpTracker.redCaptures }} captures this match</span>
+                    <button class="btn_reset" style="font-size:0.78em" @click="cpTracker.reset()">Reset</button>
+                </div>
+
+                <!-- Captures bar -->
+                <div class="section">
+                    <h2>Captures</h2>
+                    <div class="dom_tug_bar">
+                        <span class="dom_tug_val dom_tug_val--blue">{{ cpTracker.blueCaptures }}</span>
+                        <div class="dom_tug_track">
+                            <div class="dom_tug_fill dom_tug_fill--blue" :style="{ width: cpMenuBluePercent + '%' }"></div>
+                            <div class="dom_tug_fill dom_tug_fill--red"  :style="{ width: cpMenuRedPercent  + '%' }"></div>
+                        </div>
+                        <span class="dom_tug_val dom_tug_val--red">{{ cpTracker.redCaptures }}</span>
+                    </div>
+                    <p class="hint" style="margin-top:0.4em">A capture is recorded each time the controlling team changes.</p>
+                </div>
+
+            </div>
+            <!-- end CP tab -->
 
         </div>
     </div>
@@ -625,14 +687,45 @@ import { usePayloadTrackerStore, showPayloadOverlay, payloadChartType } from "@/
 import { useKillTrackerStore } from "@/stores/KillTrackerStore";
 import type { KohZone } from "@/interfaces/KohZone";
 import { isMenuOpen, headshotFlashEnabled } from "@/stores/UiState";
+import { refreshTeamNames } from "@/HyperBashLogic/HyperBashCalls";
 import { useDominationTrackerStore } from "@/stores/DominationTrackerStore";
+import { useControlPointTrackerStore } from "@/stores/ControlPointTrackerStore";
 import { Teams } from "@/interfaces/StoreInterfaces/MatchInfo";
 
 // ── Top-level tab ─────────────────────────────────────────────────────────────
-const topTab = ref<"settings" | "koh" | "payload" | "kills" | "dom">("settings");
+const topTab = ref<"settings" | "koh" | "payload" | "kills" | "dom" | "cp">("settings");
 
 // ── Domination tracker ──────────────────────────────────────────────────────────────────
 const domTracker = useDominationTrackerStore();
+
+// ── Control Point tracker ───────────────────────────────────────────────────────────────
+const cpTracker = useControlPointTrackerStore();
+
+const cpMenuBluePercent = computed(() => {
+    const total = cpTracker.blueCaptures + cpTracker.redCaptures;
+    return total === 0 ? 0 : (cpTracker.blueCaptures / total) * 100;
+});
+const cpMenuRedPercent = computed(() => {
+    const total = cpTracker.blueCaptures + cpTracker.redCaptures;
+    return total === 0 ? 0 : (cpTracker.redCaptures / total) * 100;
+});
+
+const captureBluePercent = computed(() => {
+    const total = domTracker.blueCaptures + domTracker.redCaptures;
+    return total === 0 ? 0 : (domTracker.blueCaptures / total) * 100;
+});
+const captureRedPercent = computed(() => {
+    const total = domTracker.blueCaptures + domTracker.redCaptures;
+    return total === 0 ? 0 : (domTracker.redCaptures / total) * 100;
+});
+const counterBluePercent = computed(() => {
+    const total = domTracker.blueCounters + domTracker.redCounters;
+    return total === 0 ? 0 : (domTracker.blueCounters / total) * 100;
+});
+const counterRedPercent = computed(() => {
+    const total = domTracker.blueCounters + domTracker.redCounters;
+    return total === 0 ? 0 : (domTracker.redCounters / total) * 100;
+});
 
 function teamLabel(team: Teams): string {
     if (team === Teams.blue) return 'Blue';
@@ -684,6 +777,63 @@ function clearKillLog() {
 
 // ── Settings logic ────────────────────────────────────────────────────────────
 const settingState = useSettingStore();
+
+// ── Team name overrides ───────────────────────────────────────────────────────
+const CUSTOM = '__CUSTOM__';
+
+// Initialise select mode from whatever the store already has
+function initSelectMode(override: string | null, candidates: string[]): string {
+    if (override === null) return '';
+    if (candidates.includes(override)) return override;
+    return CUSTOM;
+}
+
+const redSelectMode  = ref(initSelectMode(settingState.redTeamOverride,  settingState.redTeamCandidates));
+const redCustomInput = ref(settingState.redTeamOverride !== null && !settingState.redTeamCandidates.includes(settingState.redTeamOverride) ? settingState.redTeamOverride : '');
+const redIsCustom    = computed(() => redSelectMode.value === CUSTOM);
+
+const blueSelectMode  = ref(initSelectMode(settingState.blueTeamOverride,  settingState.blueTeamCandidates));
+const blueCustomInput = ref(settingState.blueTeamOverride !== null && !settingState.blueTeamCandidates.includes(settingState.blueTeamOverride) ? settingState.blueTeamOverride : '');
+const blueIsCustom    = computed(() => blueSelectMode.value === CUSTOM);
+
+function onRedModeChange() {
+    const v = redSelectMode.value;
+    if (v === '') {
+        settingState.redTeamOverride = null;
+        refreshTeamNames();
+    } else if (v === CUSTOM) {
+        // Pre-fill with current team name so user can edit from where they are
+        redCustomInput.value = matchStore.TeamData.red.name;
+        settingState.redTeamOverride = redCustomInput.value;
+        matchStore.TeamData.red.name = redCustomInput.value;
+    } else {
+        settingState.redTeamOverride = v;
+        matchStore.TeamData.red.name = v;
+    }
+}
+function onRedCustomInput() {
+    settingState.redTeamOverride = redCustomInput.value;
+    matchStore.TeamData.red.name = redCustomInput.value;
+}
+
+function onBlueModeChange() {
+    const v = blueSelectMode.value;
+    if (v === '') {
+        settingState.blueTeamOverride = null;
+        refreshTeamNames();
+    } else if (v === CUSTOM) {
+        blueCustomInput.value = matchStore.TeamData.blue.name;
+        settingState.blueTeamOverride = blueCustomInput.value;
+        matchStore.TeamData.blue.name = blueCustomInput.value;
+    } else {
+        settingState.blueTeamOverride = v;
+        matchStore.TeamData.blue.name = v;
+    }
+}
+function onBlueCustomInput() {
+    settingState.blueTeamOverride = blueCustomInput.value;
+    matchStore.TeamData.blue.name = blueCustomInput.value;
+}
 
 const iconURLSetting = computed({
     get() { return settingState.IconSettings.iconMode; },
@@ -965,6 +1115,9 @@ async function exportJson() {
         letter-spacing: 0.08em;
     }
 }
+
+.label--red  { color: #ff9090 !important; }
+.label--blue { color: #72aeff !important; }
 
 .toggle_row {
     display: flex;
@@ -1773,49 +1926,49 @@ button:disabled { opacity: 0.25; cursor: not-allowed; }
     margin-top: 2px;
 }
 
-.dom_stat_row {
+.dom_tug_bar {
     display: flex;
     align-items: center;
-    gap: 0;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 6px;
-    overflow: hidden;
+    gap: 0.55em;
     margin-bottom: 0.6em;
 }
 
-.dom_stat {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0.5em 0.4em;
-
-    &--blue { background: rgba(0,69,255,0.12); }
-    &--red  { background: rgba(255,0,0,0.12); }
-}
-
-.dom_stat_num {
-    font-size: 1.55em;
+.dom_tug_val {
+    font-size: 1.4em;
     font-weight: 800;
     font-family: monospace;
-    color: #fff;
-    line-height: 1.1;
+    min-width: 1.6em;
+    text-align: center;
+    line-height: 1;
+
+    &--blue { color: #72aeff; text-align: left; }
+    &--red  { color: #ff7272; text-align: right; }
 }
 
-.dom_stat_label {
-    font-size: 0.65em;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: rgba(255,255,255,0.38);
-    margin-top: 0.15em;
+.dom_tug_track {
+    flex: 1;
+    height: 20px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
 }
 
-.dom_stat_divider {
-    width: 1px;
-    align-self: stretch;
-    background: rgba(255,255,255,0.08);
-    flex-shrink: 0;
+.dom_tug_fill {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    transition: width 0.35s ease;
+
+    &--blue {
+        left: 0;
+        background: linear-gradient(to right, rgba(0,60,220,0.85), rgba(70,140,255,0.65));
+    }
+    &--red {
+        right: 0;
+        background: linear-gradient(to left, rgba(180,0,0,0.85), rgba(255,80,80,0.65));
+    }
 }
 
 .dom_log {

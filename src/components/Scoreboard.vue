@@ -46,16 +46,38 @@
 				</div>
 			</div>
 		</div>
-		<!-- CAP / CTR stats only visible in domination mode -->
-		<div class="dom_stats_row" v-if="matchInfo.matchType === MatchType.Domination">
-			<div class="dom_stats dom_stats--blue">
-				<span>CAP {{ domTracker.blueCaptures }}</span>
-				<span>CTR {{ domTracker.blueCounters }}</span>
+		<!-- CAP tug-of-war bar only visible in control point mode -->
+		<div class="dom_tug_rows" v-if="matchInfo.matchType === MatchType.ControlPoint">
+			<div class="dom_tug_row">
+				<span class="dom_tug_label">CAP</span>
+				<span class="dom_tug_num dom_tug_num--blue">{{ cpTracker.blueCaptures }}</span>
+				<div class="dom_tug_track">
+					<div class="dom_tug_fill dom_tug_fill--blue" :style="{ width: cpBluePercent + '%' }"></div>
+					<div class="dom_tug_fill dom_tug_fill--red"  :style="{ width: cpRedPercent  + '%' }"></div>
+				</div>
+				<span class="dom_tug_num dom_tug_num--red">{{ cpTracker.redCaptures }}</span>
 			</div>
-			<div class="dom_stats_spacer"></div>
-			<div class="dom_stats dom_stats--red">
-				<span>CAP {{ domTracker.redCaptures }}</span>
-				<span>CTR {{ domTracker.redCounters }}</span>
+		</div>
+
+		<!-- CAP / CTR tug-of-war bars only visible in domination mode -->
+		<div class="dom_tug_rows" v-if="matchInfo.matchType === MatchType.Domination">
+			<div class="dom_tug_row">
+				<span class="dom_tug_label">CAP</span>
+				<span class="dom_tug_num dom_tug_num--blue">{{ domTracker.blueCaptures }}</span>
+				<div class="dom_tug_track">
+					<div class="dom_tug_fill dom_tug_fill--blue" :style="{ width: captureBluePercent + '%' }"></div>
+					<div class="dom_tug_fill dom_tug_fill--red"  :style="{ width: captureRedPercent  + '%' }"></div>
+				</div>
+				<span class="dom_tug_num dom_tug_num--red">{{ domTracker.redCaptures }}</span>
+			</div>
+			<div class="dom_tug_row">
+				<span class="dom_tug_label">CTR</span>
+				<span class="dom_tug_num dom_tug_num--blue">{{ domTracker.blueCounters }}</span>
+				<div class="dom_tug_track">
+					<div class="dom_tug_fill dom_tug_fill--blue" :style="{ width: counterBluePercent + '%' }"></div>
+					<div class="dom_tug_fill dom_tug_fill--red"  :style="{ width: counterRedPercent  + '%' }"></div>
+				</div>
+				<span class="dom_tug_num dom_tug_num--red">{{ domTracker.redCounters }}</span>
 			</div>
 		</div>
 	</div>
@@ -177,29 +199,73 @@
 }
 
 
-.dom_stats_row {
+.dom_tug_rows {
 	display: flex;
-	width: 523px;
-	justify-content: space-between;
-	padding: 3px 30px 0;
-	box-sizing: border-box;
+	flex-direction: column;
+	gap: 3px;
+	width: 640px;
+	padding: 4px 0 0;
 }
 
-.dom_stats_spacer { flex: 1; }
-
-.dom_stats {
+.dom_tug_row {
 	display: flex;
-	gap: 10px;
-	font-size: 9px;
-	font-weight: 700;
+	align-items: center;
+	gap: 5px;
+}
+
+.dom_tug_label {
+	font-size: 11px;
+	font-weight: 900;
 	font-family: monospace;
-	letter-spacing: 0.07em;
+	letter-spacing: 0.08em;
 	text-transform: uppercase;
-	opacity: 0.85;
+	color: #fff;
+	background: rgba(0,0,0,0.75);
+	border: 1px solid rgba(255,255,255,0.65);
+	border-radius: 3px;
+	padding: 1px 5px;
+	flex-shrink: 0;
+	text-align: center;
 }
 
-.dom_stats--blue { color: #72b4ff; }
-.dom_stats--red  { color: #ff9090; }
+.dom_tug_num {
+	font-size: 13px;
+	font-weight: 900;
+	font-family: monospace;
+	min-width: 16px;
+	text-align: center;
+	line-height: 1;
+	text-shadow: 0 0 4px rgba(0,0,0,0.8), 1px 1px 0 #000, -1px -1px 0 #000;
+}
+
+.dom_tug_num--blue { color: #72b4ff; text-align: right; }
+.dom_tug_num--red  { color: #ff9090; text-align: left; }
+
+.dom_tug_track {
+	flex: 1;
+	height: 5px;
+	background: rgba(255,255,255,0.08);
+	border-radius: 3px;
+	position: relative;
+	overflow: hidden;
+}
+
+.dom_tug_fill {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	transition: width 0.35s ease;
+}
+
+.dom_tug_fill--blue {
+	left: 0;
+	background: linear-gradient(to right, rgba(0,60,220,0.9), rgba(90,160,255,0.7));
+}
+
+.dom_tug_fill--red {
+	right: 0;
+	background: linear-gradient(to left, rgba(180,0,0,0.9), rgba(255,90,90,0.7));
+}
 </style>
 
 <script setup lang="ts">
@@ -209,12 +275,40 @@ import Bar from "./Bar.vue";
 import { useMatchStateStore } from "@/stores/MatchStateStore";
 import { useKohScoreStore, showKohScores } from "@/stores/KohScoreStore";
 import { useDominationTrackerStore } from "@/stores/DominationTrackerStore";
+import { useControlPointTrackerStore } from "@/stores/ControlPointTrackerStore";
 import { EventAnnouncer } from "@/HyperBashLogic/HyperBashEvents";
 import { AnnouncerLayout } from "@/interfaces/HyperBashMessages.interface";
 import { PlayerStateInfo } from "@/interfaces/StoreInterfaces/StoreState";
 
-const kohScore = useKohScoreStore();
+const kohScore   = useKohScoreStore();
 const domTracker = useDominationTrackerStore();
+const cpTracker  = useControlPointTrackerStore();
+
+const cpBluePercent = computed(() => {
+	const total = cpTracker.blueCaptures + cpTracker.redCaptures;
+	return total === 0 ? 0 : (cpTracker.blueCaptures / total) * 100;
+});
+const cpRedPercent = computed(() => {
+	const total = cpTracker.blueCaptures + cpTracker.redCaptures;
+	return total === 0 ? 0 : (cpTracker.redCaptures / total) * 100;
+});
+
+const captureBluePercent = computed(() => {
+	const total = domTracker.blueCaptures + domTracker.redCaptures;
+	return total === 0 ? 0 : (domTracker.blueCaptures / total) * 100;
+});
+const captureRedPercent = computed(() => {
+	const total = domTracker.blueCaptures + domTracker.redCaptures;
+	return total === 0 ? 0 : (domTracker.redCaptures / total) * 100;
+});
+const counterBluePercent = computed(() => {
+	const total = domTracker.blueCounters + domTracker.redCounters;
+	return total === 0 ? 0 : (domTracker.blueCounters / total) * 100;
+});
+const counterRedPercent = computed(() => {
+	const total = domTracker.blueCounters + domTracker.redCounters;
+	return total === 0 ? 0 : (domTracker.redCounters / total) * 100;
+});
 
 const state = useMatchStateStore();
 let customTimer = ref(0);
