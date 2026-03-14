@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DashCam Onboarding Guide</title>
+  <style>
+    :root {
+      --bg: #f3efe7;
+      --paper: #fffdf8;
+      --ink: #1c1a17;
+      --muted: #625b52;
+      --accent: #1c7c54;
+      --accent-2: #d8a338;
+      --line: #ded4c5;
+      --terminal: #111111;
+      --terminal-ink: #f2f2f2;
+      --terminal-green: #59e38f;
+      --terminal-yellow: #f6cf58;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(216, 163, 56, 0.18), transparent 28%),
+        linear-gradient(180deg, #f7f2ea 0%, var(--bg) 100%);
+    }
+
+    .page {
+      width: 8.5in;
+      min-height: 11in;
+      margin: 0 auto;
+      padding: 0.6in;
+      background: var(--paper);
+    }
+
+    .hero {
+      padding: 0.34in;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(28, 124, 84, 0.08), rgba(216, 163, 56, 0.12));
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      margin: 14px 0 0;
+      max-width: 6.2in;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 22px;
+      margin-top: 22px;
+    }
+
+    .card {
+      padding: 18px 20px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fff;
+      break-inside: avoid;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    li {
+      margin: 0 0 10px;
+      line-height: 1.45;
+    }
+
+    p {
+      margin: 0 0 10px;
+      line-height: 1.5;
+    }
+
+    .callout {
+      padding: 14px 16px;
+      border-left: 5px solid var(--accent-2);
+      background: #fff7e2;
+      border-radius: 12px;
+      color: #4d3c17;
+      font-size: 14px;
+    }
+
+    .terminal {
+      margin-top: 12px;
+      padding: 16px;
+      border-radius: 16px;
+      background: var(--terminal);
+      color: var(--terminal-ink);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+
+    .green {
+      color: var(--terminal-green);
+    }
+
+    .yellow {
+      color: var(--terminal-yellow);
+    }
+
+    .faq-item {
+      margin-bottom: 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .faq-item:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .faq-q {
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .pill {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #eef7f1;
+      border: 1px solid #cfe5d7;
+      color: #20563e;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .small {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    @media print {
+      body {
+        background: none;
+      }
+
+      .page {
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <p class="eyebrow">DashCam Setup Guide</p>
+      <h1>One clean path from zip file to running DashCam.</h1>
+      <p class="subtitle">
+        This guide is written for someone who is not comfortable with terminals or package managers.
+        Follow the steps in order, and use the repair launcher if the first start shows warnings.
+      </p>
+      <div class="pill-row">
+        <div class="pill">Double-click install</div>
+        <div class="pill">Double-click start</div>
+        <div class="pill">Use repair start if needed</div>
+        <div class="pill">Right Shift opens the menu</div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Onboarding</h2>
+        <ol>
+          <li>Unzip the folder, then open the new <strong>DashCam_KoH</strong> folder.</li>
+          <li>Double-click <strong>install.bat</strong>.</li>
+          <li>After install finishes, double-click <strong>START_DASHCAM.bat</strong>.</li>
+          <li>A terminal window should open. That is normal.</li>
+          <li>Your output may look like Example 1 below. That is not a bad thing.</li>
+          <li>Hold <strong>Ctrl + C</strong> for a few seconds to stop the terminal.</li>
+          <li>The terminal may print a bunch of lines while stopping. That is good. You stopped it correctly. The window may also auto-close.</li>
+          <li>Now double-click <strong>START_DASHCAM_AUDIT_FIX.bat</strong>.</li>
+          <li>Wait until you see a local link in the terminal like the one in Example 2.</li>
+          <li>Hover the link, hold <strong>Ctrl</strong>, and click it to open DashCam in your browser.</li>
+          <li>Press the <strong>Right Shift</strong> key to show or hide the DashCam menu.</li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h2>What The Files Do</h2>
+        <p><strong>install.bat</strong> installs the packages DashCam needs.</p>
+        <p><strong>START_DASHCAM.bat</strong> starts DashCam normally.</p>
+        <p><strong>START_DASHCAM_AUDIT_FIX.bat</strong> runs a package repair pass, then starts DashCam.</p>
+        <div class="callout">
+          If you see warnings about vulnerabilities during install, that is exactly why the repair launcher exists.
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Example 1</h2>
+        <p class="small">A normal first run may show install output and even a port change.</p>
+        <div class="terminal">Checking dependencies...
+node_modules not found, running npm install...
+
+added 69 packages, and audited 70 packages
+2 high severity vulnerabilities
+
+Starting DashCam...
+Leave this window open while the app is running.
+
+&gt; dashcam@2.0.0 dev
+&gt; vite
+
+Port 5173 is in use, trying another one...
+
+<span class="green">Local:</span> http://127.0.0.1:5174/</div>
+      </div>
+
+      <div class="card">
+        <h2>Example 2</h2>
+        <p class="small">The repair launcher runs install, applies the audit fix, and starts DashCam.</p>
+        <div class="terminal">DashCam Repair and Launch
+
+This will run:
+1. npm install
+2. npm audit fix --force
+3. npm run dev
+
+Running npm install...
+Running npm audit fix --force...
+
+<span class="yellow">found 0 vulnerabilities</span>
+
+Starting DashCam...
+
+<span class="green">Local:</span> http://127.0.0.1:5174/</div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Short Docs</h2>
+        <h3>Normal startup</h3>
+        <p>Use <strong>START_DASHCAM.bat</strong> for everyday use.</p>
+        <h3>Repair startup</h3>
+        <p>Use <strong>START_DASHCAM_AUDIT_FIX.bat</strong> if the normal start looks unhealthy or you want to clear audit issues before launching.</p>
+        <h3>Browser launch</h3>
+        <p>Open the local link shown in the terminal. Hold <strong>Ctrl</strong> and click it.</p>
+        <h3>Menu toggle</h3>
+        <p>The <strong>Right Shift</strong> key opens and hides the in-app menu.</p>
+      </div>
+
+      <div class="card">
+        <h2>FAQ</h2>
+        <div class="faq-item">
+          <div class="faq-q">Is the terminal window normal?</div>
+          <div>Yes. Leave it open while DashCam is running.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">I see lots of lines. Did something break?</div>
+          <div>Usually no. Most of the output is normal install or startup logging.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">The port changed from 5173 to something else. Is that bad?</div>
+          <div>No. Just open the local link the terminal gives you.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">The terminal closed by itself. What now?</div>
+          <div>Run the repair launcher next. If it still closes immediately, check whether Node.js is installed.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">How do I open the menu?</div>
+          <div>Press the <strong>Right Shift</strong> key.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
